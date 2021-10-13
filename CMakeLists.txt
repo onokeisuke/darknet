@@ -432,7 +432,7 @@ if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER "3.0" AND BUILD_USELIB_TRACK 
   target_compile_definitions(dark PUBLIC TRACK_OPTFLOW=1)
 endif()
 
-target_link_libraries(darknet shm)
+target_link_libraries(darknet PRIVATE shm)
 
 if(CUDNN_FOUND)
   target_link_libraries(darknet PRIVATE CuDNN::CuDNN)

@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "blas.h"
 #include "dark_cuda.h"
+#include "shm.h"
 #include <stdio.h>
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
@@ -325,6 +326,63 @@ int compare_by_probs(const void *a_ptr, const void *b_ptr) {
     float delta = a->det.prob[a->best_class] - b->det.prob[b->best_class];
     return delta < 0 ? -1 : delta > 0 ? 1 : 0;
 }
+
+
+void shm_init(shm_output *shm, image im, detection_with_class* selected_detections, const int best_class, int i, char **names, int selected_detections_num)
+{
+    shm[i] = malloc(sizeof(shm_output));
+    shm[i].class_num = selected_detections_num;
+    shm[i].name = names[best_class];
+    shm[i].prob = selected_detections[i].det.prob[best_class] * 100;
+    shm[i].u_min = round((selected_detections[i].det.bbox.x - selected_detections[i].det.bbox.w / 2)*im.w);
+    shm[i].v_min = round((selected_detections[i].det.bbox.y - selected_detections[i].det.bbox.h / 2)*im.h);
+    shm[i].width = round(selected_detections[i].det.bbox.w*im.w);
+    shm[i].height = round(selected_detections[i].det.bbox.h*im.h);
+}
+
+void shm_write(image im, detection *dets,  int num, float thresh, char **names, image **alphabet, int classes, int ext_output, unsigned int key)
+{
+    static int frame_id = 0;
+    frame_id++;
+
+    int *number, selected_detections_num;
+    //Creates array of detections with prob > thresh and fills best_class for them
+    detection_with_class* selected_detections = get_actual_detections(dets, num, thresh, &selected_detections_num, names);
+    
+    number = (int*)shm_get_buf(key, sizeof(int));
+    *number = selected_detections_num;
+    shm_output *shm[selected_detections_num];
+    
+    // text output
+    qsort(selected_detections, selected_detections_num, sizeof(*selected_detections), compare_by_lefts);
+    int i;
+    for (i = 0; i < selected_detections_num; ++i) {
+        const int best_class = selected_detections[i].best_class;
+
+        shm[selected_detections_num] = (shm_output *)shm_get_buf(key + 1, sizeof(shm_output));
+        shm_init(shm[i], im, selected_detections, best_class, key + 1, i, selected_detections_num);
+        // shm[i] = malloc(sizeof(shm_output));
+        // shm[i]->class_num = selected_detections_num;
+        // shm[i]->name = names[best_class];
+        // shm[i]->prob = selected_detections[i].det.prob[best_class] * 100;
+        // shm[i]->u_min = round((selected_detections[i].det.bbox.x - selected_detections[i].det.bbox.w / 2)*im.w);
+        // shm[i]->v_min = round((selected_detections[i].det.bbox.y - selected_detections[i].det.bbox.h / 2)*im.h);
+        // shm[i]->width = round(selected_detections[i].det.bbox.w*im.w);
+        // shm[i]->height = round(selected_detections[i].det.bbox.h*im.h);
+        
+        printf("%s: %.0f%%", shm[i]->name, shm[i]->prob);
+        printf("\t(shm_left_x: %4.0f   shm_top_y: %4.0f   shm_width: %4.0f   shm_height: %4.0f)\n",
+                shm[i]->u_min, shm[i]->v_min, shm[i]->width, shm[i]->height);
+    }
+    for (int i = 0; i < selected_detections_num; ++i){
+        free(shm[i]);
+    }
+    free(selected_detections);
+
+    shm_rm_key(key);
+    shm_rm_key(key + 1);
+}
+
 
 void draw_detections_v3(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output)
 {

@@ -432,6 +432,8 @@ if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER "3.0" AND BUILD_USELIB_TRACK 
   target_compile_definitions(dark PUBLIC TRACK_OPTFLOW=1)
 endif()
 
+target_link_libraries(darknet shm)
+
 if(CUDNN_FOUND)
   target_link_libraries(darknet PRIVATE CuDNN::CuDNN)
   target_link_libraries(dark PRIVATE CuDNN::CuDNN)
@@ -544,6 +546,9 @@ install(TARGETS dark EXPORT DarknetTargets
 )
 install(TARGETS uselib darknet
   DESTINATION "${INSTALL_BIN_DIR}"
+)
+install(TARGETS darknet 
+  DESTINATION bin
 )
 if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER "3.0" AND BUILD_USELIB_TRACK)
   install(TARGETS uselib_track

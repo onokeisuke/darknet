@@ -34,6 +34,9 @@
 
 #define SECRET_NUM -1234
 
+#define DEFAULT_KEY	123
+
+
 typedef enum { UNUSED_DEF_VAL } UNUSED_ENUM_TYPE;
 
 #ifdef GPU

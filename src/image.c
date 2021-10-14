@@ -330,7 +330,6 @@ int compare_by_probs(const void *a_ptr, const void *b_ptr) {
 
 void shm_init(shm_output *shm, image im, detection_with_class* selected_detections, const int best_class, int i, char **names, int selected_detections_num)
 {
-    shm[i] = malloc(sizeof(shm_output));
     shm[i].class_num = selected_detections_num;
     shm[i].name = names[best_class];
     shm[i].prob = selected_detections[i].det.prob[best_class] * 100;
@@ -360,6 +359,7 @@ void shm_write(image im, detection *dets,  int num, float thresh, char **names, 
         const int best_class = selected_detections[i].best_class;
 
         shm[selected_detections_num] = (shm_output *)shm_get_buf(key + 1, sizeof(shm_output));
+        shm[i] = malloc(sizeof(shm_output));
         shm_init(shm[i], im, selected_detections, best_class, key + 1, i, selected_detections_num);
         // shm[i] = malloc(sizeof(shm_output));
         // shm[i]->class_num = selected_detections_num;

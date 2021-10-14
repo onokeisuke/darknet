@@ -420,8 +420,16 @@ if(BUILD_AS_CPP)
   set_target_properties(darknet PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
-target_include_directories(darknet PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src> $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}> $<BUILD_INTERFACE:${Stb_INCLUDE_DIR}> 
-                                          ${PROJECT_BINARY_DIR}/include )
+# shm_find
+target_link_libraries(darknet PRIVATE shm)
+target_link_libraries(dark PUBLIC shm)
+
+target_compile_options(dark  PRIVATE -Wall -fPIC)
+target_compile_options(darknet  PRIVATE -Wall -fPIC)
+
+# includeをふやした
+target_include_directories(darknet PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src> $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}> $<BUILD_INTERFACE:${Stb_INCLUDE_DIR}> ${CMAKE_BINARY_DIR}/include)
+# target_include_directories(darknet PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_include_directories(dark PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src> $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}> $<BUILD_INTERFACE:${Stb_INCLUDE_DIR}>)
 target_include_directories(uselib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src> $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}> $<BUILD_INTERFACE:${Stb_INCLUDE_DIR}>)
 
@@ -531,13 +539,12 @@ if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER "3.0" AND BUILD_USELIB_TRACK)
   target_link_libraries(uselib_track PRIVATE Threads::Threads)
 endif()
 
-# shm_find
-target_link_libraries (darknet shm)
 
 #set_target_properties(dark PROPERTIES PUBLIC_HEADER "${exported_headers};${CMAKE_CURRENT_LIST_DIR}/include/yolo_v2_class.hpp")
 set_target_properties(dark PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_LIST_DIR}/include/darknet.h;${CMAKE_CURRENT_LIST_DIR}/include/yolo_v2_class.hpp")
 
 set_target_properties(dark PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
 
 install(TARGETS dark EXPORT DarknetTargets
   RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
@@ -553,6 +560,7 @@ install(TARGETS uselib darknet
 install(TARGETS darknet 
   DESTINATION bin
 )
+
 if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER "3.0" AND BUILD_USELIB_TRACK)
   install(TARGETS uselib_track
     DESTINATION "${INSTALL_BIN_DIR}"

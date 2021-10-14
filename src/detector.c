@@ -1619,12 +1619,12 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     }
     if (net.letter_box) letter_box = 1;
     net.benchmark_layers = benchmark_layers;
-    fuse_conv_batchnorm(net);
-    calculate_binary_weights(net);
+    fuse_conv_batchnorm(net);//
+    calculate_binary_weights(net);//
     if (net.layers[net.n - 1].classes != names_size) {
         printf("\n Error: in the file %s number of names %d that isn't equal to classes=%d in the file %s \n",
             name_list, names_size, net.layers[net.n - 1].classes, cfgfile);
-        if (net.layers[net.n - 1].classes > names_size) getchar();
+        if (net.layers[net.n - 1].classes > names_size) getchar();//
     }
     srand(2222222);
     char buff[256];
